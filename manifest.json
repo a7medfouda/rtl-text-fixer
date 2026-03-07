@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "RTL Text Fixer",
-  "version": "3.2.0",
-  "description": "Fix Arabic, Hebrew & RTL text direction anywhere - select text and fix it instantly.",
+  "version": "4.0.0",
+  "description": "A dedicated RTL Element Inspector (Ctrl+Shift+E) and popup tool to fix Arabic & RTL text.",
   "action": {
     "default_popup": "popup.html",
     "default_icon": {
@@ -19,17 +19,8 @@
     "48": "icons/rtl-icon.png",
     "128": "icons/rtl-icon.png"
   },
-  "permissions": [
-    "clipboardWrite",
-    "clipboardRead",
-    "contextMenus",
-    "activeTab",
-    "scripting"
-  ],
+  "permissions": ["clipboardWrite", "clipboardRead"],
   "host_permissions": ["<all_urls>"],
-  "background": {
-    "service_worker": "background.js"
-  },
   "content_scripts": [
     {
       "matches": ["<all_urls>"],

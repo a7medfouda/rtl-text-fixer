@@ -8,9 +8,6 @@
   if (window.__rtlFixerV7) return;
   window.__rtlFixerV7 = true;
 
-  let pillEl = null;
-  let lastText = "";
-
   // Inspector mode
   let inspectorMode = false;
   let highlightEl = null;
@@ -24,46 +21,23 @@
     const s = document.createElement("style");
     s.id = "rtl7-css";
     s.textContent = `
-      /* Pill */
-      #rtl7-pill {
-        position: fixed;
-        z-index: 2147483647;
-        display: flex;
-        align-items: center;
-        gap: 6px;
-        padding: 8px 14px;
-        background: #18181b;
-        border: 1px solid #3f3f46;
-        border-radius: 8px;
-        box-shadow: 0 8px 30px rgba(0,0,0,0.5);
-        font: 600 12px/1.2 system-ui, -apple-system, sans-serif;
-        color: #fff;
-        cursor: pointer;
-        opacity: 0;
-        transform: translateY(5px);
-        transition: all 0.2s ease;
-        user-select: none;
-      }
-      #rtl7-pill.show { opacity: 1; transform: translateY(0); }
-      #rtl7-pill:hover { background: #6366f1; border-color: #6366f1; }
-      #rtl7-pill.reset { background: #7f1d1d; border-color: #991b1b; }
-      #rtl7-pill.reset:hover { background: #dc2626; }
-      
       /* Toast */
       #rtl7-toast {
+        all: initial;
         position: fixed;
         bottom: 24px;
         left: 50%;
         transform: translateX(-50%) translateY(80px);
-        z-index: 2147483647;
+        z-index: 2147483647 !important;
         padding: 12px 20px;
         background: #18181b;
         border: 1px solid #3f3f46;
         border-radius: 8px;
         box-shadow: 0 8px 30px rgba(0,0,0,0.5);
-        font: 500 13px/1.2 system-ui, -apple-system, sans-serif;
-        color: #fff;
+        font: 500 13px/1.2 system-ui, -apple-system, sans-serif !important;
+        color: #fff !important;
         transition: transform 0.3s ease;
+        pointer-events: none;
       }
       #rtl7-toast.show { transform: translateX(-50%) translateY(0); }
       #rtl7-toast.ok { border-left: 3px solid #22c55e; }
@@ -100,11 +74,12 @@
       
       /* Inspector toolbar */
       #rtl7-toolbar {
+        all: initial;
         position: fixed;
         bottom: 20px;
         left: 50%;
         transform: translateX(-50%);
-        z-index: 2147483647;
+        z-index: 2147483647 !important;
         display: flex;
         align-items: center;
         gap: 8px;
@@ -113,15 +88,18 @@
         border: 1px solid #3f3f46;
         border-radius: 12px;
         box-shadow: 0 8px 30px rgba(0,0,0,0.5);
-        font: 500 13px/1.2 system-ui, -apple-system, sans-serif;
-        color: #fff;
+        font: 500 13px/1.2 system-ui, -apple-system, sans-serif !important;
+        color: #fff !important;
       }
       
       #rtl7-toolbar button {
+        all: initial;
+        display: inline-block;
+        box-sizing: border-box;
         padding: 8px 14px;
         border: none;
         border-radius: 6px;
-        font: 600 12px/1 system-ui, sans-serif;
+        font: 600 12px/1 system-ui, sans-serif !important;
         cursor: pointer;
         transition: all 0.15s ease;
       }
@@ -153,18 +131,20 @@
       
       /* Mode indicator */
       #rtl7-mode {
+        all: initial;
         position: fixed;
         top: 20px;
         left: 50%;
         transform: translateX(-50%) translateY(-80px);
-        z-index: 2147483647;
+        z-index: 2147483647 !important;
         padding: 10px 20px;
         background: #6366f1;
         border-radius: 8px;
         box-shadow: 0 8px 30px rgba(0,0,0,0.3);
-        font: 600 13px/1.2 system-ui, sans-serif;
-        color: #fff;
+        font: 600 13px/1.2 system-ui, sans-serif !important;
+        color: #fff !important;
         transition: transform 0.3s ease;
+        pointer-events: none;
       }
       #rtl7-mode.show { transform: translateX(-50%) translateY(0); }
     `;
@@ -191,139 +171,7 @@
     }, 2500);
   }
 
-  // ========== PILL (for text selection) ==========
-
-  function showPill(x, y, isReset) {
-    hidePill();
-    injectCSS();
-
-    const p = document.createElement("div");
-    p.id = "rtl7-pill";
-    if (isReset) p.classList.add("reset");
-    p.innerHTML = `<span>${isReset ? "↩" : "→←"}</span> ${
-      isReset ? "Reset" : "Fix RTL"
-    }`;
-
-    document.body.appendChild(p);
-
-    const rect = p.getBoundingClientRect();
-    let px = Math.min(
-      Math.max(8, x - rect.width / 2),
-      window.innerWidth - rect.width - 8
-    );
-    let py = y - rect.height - 10;
-    if (py < 8) py = y + 20;
-
-    p.style.left = px + "px";
-    p.style.top = py + "px";
-
-    requestAnimationFrame(() => p.classList.add("show"));
-
-    p.onmousedown = (e) => {
-      e.preventDefault();
-      e.stopPropagation();
-      applyTextFix(isReset);
-      hidePill();
-    };
-
-    pillEl = p;
-  }
-
-  function hidePill() {
-    pillEl?.remove();
-    pillEl = null;
-  }
-
-  // ========== TEXT SELECTION FIX ==========
-
-  function findWrapper(node) {
-    if (!node) return null;
-    const el = node.nodeType === 3 ? node.parentElement : node;
-    return el?.closest(".rtl7-wrap");
-  }
-
-  function applyTextFix(reset) {
-    const sel = window.getSelection();
-    if (!sel || sel.isCollapsed || !sel.toString().trim()) {
-      toast("Select text first", "err");
-      return;
-    }
-
-    const range = sel.getRangeAt(0);
-    const wrapper = findWrapper(range.commonAncestorContainer);
-
-    if (wrapper) {
-      const parent = wrapper.parentNode;
-      while (wrapper.firstChild) {
-        parent.insertBefore(wrapper.firstChild, wrapper);
-      }
-      wrapper.remove();
-      parent.normalize();
-      sel.removeAllRanges();
-      toast("Reset done");
-      return;
-    }
-
-    if (reset) {
-      toast("Not wrapped", "err");
-      return;
-    }
-
-    try {
-      const span = document.createElement("span");
-      span.className = "rtl7-wrap";
-      range.surroundContents(span);
-      sel.removeAllRanges();
-      toast("Direction fixed");
-    } catch (e) {
-      try {
-        const span = document.createElement("span");
-        span.className = "rtl7-wrap";
-        const contents = range.extractContents();
-        span.appendChild(contents);
-        range.insertNode(span);
-        sel.removeAllRanges();
-        toast("Direction fixed");
-      } catch (e2) {
-        toast("Could not fix", "err");
-      }
-    }
-  }
-
-  function checkSelection() {
-    if (inspectorMode) return;
-
-    const sel = window.getSelection();
-    const active = document.activeElement;
-
-    if (
-      active?.tagName === "INPUT" ||
-      active?.tagName === "TEXTAREA" ||
-      active?.isContentEditable
-    ) {
-      hidePill();
-      lastText = "";
-      return;
-    }
-
-    if (!sel || sel.isCollapsed || !sel.toString().trim()) {
-      hidePill();
-      lastText = "";
-      return;
-    }
-
-    const text = sel.toString();
-    if (text === lastText && pillEl) return;
-    lastText = text;
-
-    const range = sel.getRangeAt(0);
-    const rect = range.getBoundingClientRect();
-    const x = rect.left + rect.width / 2 + window.scrollX;
-    const y = rect.top + window.scrollY;
-    const isWrapped = !!findWrapper(range.commonAncestorContainer);
-
-    showPill(x, y, isWrapped);
-  }
+  // Text selection logic removed.
 
   // ========== INSPECTOR MODE ==========
 
@@ -357,8 +205,12 @@
     if (!el || !highlightEl) return;
 
     const rect = el.getBoundingClientRect();
-    highlightEl.style.left = rect.left + window.scrollX + "px";
-    highlightEl.style.top = rect.top + window.scrollY + "px";
+    
+    // Use getBoundingClientRect to directly position fixed overlay based on viewport coordinates.
+    // This perfectly handles nested scroll contexts because fixed elements are relative to the viewport.
+    highlightEl.style.position = "fixed";
+    highlightEl.style.left = rect.left + "px";
+    highlightEl.style.top = rect.top + "px";
     highlightEl.style.width = rect.width + "px";
     highlightEl.style.height = rect.height + "px";
     highlightEl.style.display = "block";
@@ -407,7 +259,6 @@
 
     inspectorMode = true;
     selectedElements = [];
-    hidePill();
     createHighlight();
     showToolbar();
     showModeIndicator("🎯 Inspector Mode - Click elements to select");
@@ -471,7 +322,7 @@
 
     toast(
       `${reset ? "Reset" : "Fixed"} ${count} element${count > 1 ? "s" : ""}`,
-      "ok"
+      "ok",
     );
   }
 
@@ -482,7 +333,7 @@
     // Ignore our own elements
     if (
       e.target.closest(
-        "#rtl7-toolbar, #rtl7-highlight, #rtl7-pill, #rtl7-toast, #rtl7-mode"
+        "#rtl7-toolbar, #rtl7-highlight, #rtl7-pill, #rtl7-toast, #rtl7-mode",
       )
     ) {
       hideHighlight();
@@ -500,7 +351,7 @@
     // Ignore our own elements
     if (
       e.target.closest(
-        "#rtl7-toolbar, #rtl7-highlight, #rtl7-pill, #rtl7-toast, #rtl7-mode"
+        "#rtl7-toolbar, #rtl7-highlight, #rtl7-pill, #rtl7-toast, #rtl7-mode",
       )
     ) {
       return;
@@ -514,28 +365,6 @@
 
   // ========== EVENT LISTENERS ==========
 
-  // Text selection
-  document.addEventListener(
-    "mouseup",
-    (e) => {
-      if (inspectorMode) return;
-      if (pillEl?.contains(e.target)) return;
-      setTimeout(checkSelection, 50);
-    },
-    true
-  );
-
-  document.addEventListener(
-    "keyup",
-    (e) => {
-      if (inspectorMode) return;
-      if (e.shiftKey || e.key === "Shift") {
-        setTimeout(checkSelection, 50);
-      }
-    },
-    true
-  );
-
   // Inspector mouse events
   document.addEventListener("mousemove", onInspectorMouseMove, true);
   document.addEventListener("click", onInspectorClick, true);
@@ -544,58 +373,25 @@
   document.addEventListener(
     "scroll",
     () => {
-      hidePill();
       if (inspectorMode && hoveredEl) {
         updateHighlight(hoveredEl);
       }
     },
-    true
+    true,
   );
 
   document.addEventListener("keydown", (e) => {
     if (e.key === "Escape") {
       if (inspectorMode) {
         exitInspector();
-      } else {
-        hidePill();
       }
     }
   });
-
-  document.addEventListener(
-    "mousedown",
-    (e) => {
-      if (pillEl && !pillEl.contains(e.target)) {
-        hidePill();
-        lastText = "";
-      }
-    },
-    true
-  );
 
   // Keyboard shortcuts
   document.addEventListener(
     "keydown",
     (e) => {
-      // Ctrl+Shift+R - Fix text selection
-      if (
-        (e.ctrlKey || e.metaKey) &&
-        e.shiftKey &&
-        e.key.toLowerCase() === "r"
-      ) {
-        if (inspectorMode) return;
-        e.preventDefault();
-        const sel = window.getSelection();
-        if (sel && !sel.isCollapsed && sel.toString().trim()) {
-          const range = sel.getRangeAt(0);
-          const isWrapped = !!findWrapper(range.commonAncestorContainer);
-          applyTextFix(isWrapped);
-          hidePill();
-        } else {
-          toast("Select text first", "err");
-        }
-      }
-
       // Ctrl+Shift+E - Toggle inspector mode
       if (
         (e.ctrlKey || e.metaKey) &&
@@ -610,19 +406,12 @@
         }
       }
     },
-    true
+    true,
   );
 
   // Background messages
   if (typeof chrome !== "undefined" && chrome.runtime?.onMessage) {
     chrome.runtime.onMessage.addListener((msg, _, respond) => {
-      if (msg.action === "fixSelection") {
-        const sel = window.getSelection();
-        if (sel && !sel.isCollapsed) {
-          const range = sel.getRangeAt(0);
-          applyTextFix(!!findWrapper(range.commonAncestorContainer));
-        }
-      }
       if (msg.action === "toggleInspector") {
         if (inspectorMode) exitInspector();
         else enterInspector();
@@ -631,5 +420,5 @@
     });
   }
 
-  console.log("RTL Fixer v7 ✓ (Ctrl+Shift+R: text, Ctrl+Shift+E: inspector)");
+  console.log("RTL Fixer v8 ✓ (Ctrl+Shift+E: inspector)");
 })();
