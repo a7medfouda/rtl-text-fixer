@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en" dir="ltr">
   <head>
     <meta charset="UTF-8" />
@@ -15,7 +15,12 @@
       <!-- Header -->
       <header class="header">
         <h1 class="logo">RTL Fixer</h1>
-        <button class="icon-btn" id="themeToggle" title="Toggle Theme">
+        <button
+          class="icon-btn"
+          id="themeToggle"
+          title="Toggle Theme"
+          aria-label="Toggle dark/light theme"
+        >
           <svg
             class="sun-icon"
             width="18"
@@ -24,6 +29,7 @@
             fill="none"
             stroke="currentColor"
             stroke-width="2"
+            aria-hidden="true"
           >
             <circle cx="12" cy="12" r="5"></circle>
             <path
@@ -38,6 +44,7 @@
             fill="none"
             stroke="currentColor"
             stroke-width="2"
+            aria-hidden="true"
           >
             <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
           </svg>
@@ -48,29 +55,37 @@
       <div class="input-group">
         <textarea
           id="textInput"
-          placeholder="Type or paste your text here..."
+          placeholder="Type or paste Arabic / RTL text here…"
+          aria-label="Text to fix"
         ></textarea>
       </div>
 
-      <!-- Action Button -->
+      <!-- Primary action -->
       <button id="fixBtn" class="primary-btn">Fix & Copy</button>
 
       <!-- Quick Actions -->
       <div class="quick-actions">
-        <button class="action-btn" id="pasteBtn">Paste</button>
-        <button class="action-btn" id="clearBtn">Clear</button>
+        <button class="action-btn" id="pasteBtn" title="Paste from clipboard">
+          Paste
+        </button>
+        <button class="action-btn" id="clearBtn" title="Clear text">
+          Clear
+        </button>
       </div>
 
       <!-- Status -->
-      <div id="status" class="status"></div>
+      <div id="status" class="status" role="status" aria-live="polite"></div>
 
       <!-- Footer -->
       <footer class="footer">
+        &nbsp; For the inspector use <kbd>Ctrl+Shift+E</kbd> on any page
+        <br />
+
         Made by
         <a
           href="https://www.linkedin.com/in/a7medfouda/"
           target="_blank"
-          rel="noopener"
+          rel="noopener noreferrer"
           >Ahmed Fouda</a
         >
       </footer>

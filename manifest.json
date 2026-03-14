@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "RTL Text Fixer",
-  "version": "4.0.0",
+  "version": "4.1.0",
   "description": "A dedicated RTL Element Inspector (Ctrl+Shift+E) and popup tool to fix Arabic & RTL text.",
   "action": {
     "default_popup": "popup.html",
@@ -19,7 +19,16 @@
     "48": "icons/rtl-icon.png",
     "128": "icons/rtl-icon.png"
   },
-  "permissions": ["clipboardWrite", "clipboardRead"],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "permissions": [
+    "clipboardWrite",
+    "clipboardRead",
+    "storage",
+    "activeTab",
+    "scripting"
+  ],
   "host_permissions": ["<all_urls>"],
   "content_scripts": [
     {
@@ -34,5 +43,8 @@
       "resources": ["icons/*"],
       "matches": ["<all_urls>"]
     }
-  ]
+  ],
+  "content_security_policy": {
+    "extension_pages": "script-src 'self'; object-src 'self'"
+  }
 }
