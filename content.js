@@ -1,11 +1,16 @@
 /**
- * RTL Fixer v4.1 - Element Inspector
- * Ctrl+Shift+E: toggle inspector mode
+ * RTL Fixer v4.2 - Element Inspector
+ * Keyboard shortcut is now handled at browser level via manifest "commands".
+ * JS keydown listener kept only as in-page fallback for Ctrl+Z and Esc.
  */
 
 (() => {
-  if (window.__rtlFixerV41) return;
-  window.__rtlFixerV41 = true;
+  // ── SPA guard: reset on soft navigation ───────────────────────────────────
+  // On SPAs (React/Vue/etc), the window object persists across route changes,
+  // so a simple boolean guard would block re-injection after navigation.
+  // We store the guard on the document instead, which IS replaced on navigation.
+  if (document.__rtlFixerV42) return;
+  document.__rtlFixerV42 = true;
 
   // ========== STATE ==========
 
@@ -441,13 +446,6 @@
       return;
     }
 
-    // Ctrl/Cmd+Shift+E — toggle inspector
-    if ((e.ctrlKey || e.metaKey) && e.shiftKey && key === "e") {
-      e.preventDefault();
-      inspectorMode ? exitInspector() : enterInspector();
-      return;
-    }
-
     // Ctrl/Cmd+Z — undo (while inspector is open)
     if (
       (e.ctrlKey || e.metaKey) &&
@@ -457,6 +455,14 @@
     ) {
       e.preventDefault();
       undoLastFix();
+      return;
+    }
+
+    // Ctrl+Shift+E in-page fallback (browser command takes priority,
+    // but this catches edge cases where the command isn't registered yet)
+    if ((e.ctrlKey || e.metaKey) && e.shiftKey && key === "e") {
+      e.preventDefault();
+      inspectorMode ? exitInspector() : enterInspector();
     }
   }
 
@@ -482,5 +488,5 @@
     });
   }
 
-  console.log("RTL Fixer v4.1 ✓ — Ctrl+Shift+E: inspector | Ctrl+Z: undo");
+  console.log("RTL Fixer v4.2 ✓ — Ctrl+Shift+E: inspector | Ctrl+Z: undo");
 })();

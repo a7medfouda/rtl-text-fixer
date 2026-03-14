@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "RTL Text Fixer",
-  "version": "4.1.0",
+  "version": "4.2.0",
   "description": "A dedicated RTL Element Inspector (Ctrl+Shift+E) and popup tool to fix Arabic & RTL text.",
   "action": {
     "default_popup": "popup.html",
@@ -46,5 +46,14 @@
   ],
   "content_security_policy": {
     "extension_pages": "script-src 'self'; object-src 'self'"
+  },
+  "commands": {
+    "toggle-inspector": {
+      "suggested_key": {
+        "default": "Ctrl+Shift+E",
+        "mac": "Command+Shift+E"
+      },
+      "description": "Toggle RTL Element Inspector"
+    }
   }
 }
